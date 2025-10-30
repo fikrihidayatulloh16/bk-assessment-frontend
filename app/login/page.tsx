@@ -92,7 +92,7 @@ export default function LoginPage() {
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="mt-5 w-full" disabled={loading}>
               {loading ? 'Loading...' : 'Login'}
             </Button>
           </CardFooter>

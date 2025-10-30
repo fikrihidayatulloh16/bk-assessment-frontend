@@ -44,3 +44,12 @@ export const fetchLogin = async (email: string, password: string) => {
 
     return response.json();
 }
+
+// Fungsi helper untuk logout
+export const fetchLogout = async () => {
+  // Kita tidak peduli dengan respons JSON-nya,
+  // kita hanya perlu memanggilnya
+  await fetchWithCredentials('/auth/logout', {
+    method: 'POST',
+  });
+};

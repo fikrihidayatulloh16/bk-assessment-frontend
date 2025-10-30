@@ -91,9 +91,10 @@ export default function AssessmentDetailPage() {
   // (Kode JSX Anda dari sebelumnya sudah benar,
   // pastikan Anda menempelkannya di sini)
   return (
-    <div className="container mx-auto p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Manajemen Pertanyaan</h1>
+    // Tambahkan padding container kita di sini
+    <div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <h1 className="text-3xl font-bold">Daftar Pertanyaan</h1>
 
         {/* Tombol untuk membuka Modal 'Tambah Pertanyaan' */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -154,11 +155,11 @@ export default function AssessmentDetailPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Pertanyaan</TableHead>
-              <TableHead>Domain</TableHead>
+              <TableHead className="font-semibold text-foreground">Pertanyaan</TableHead>
+              <TableHead className="font-semibold text-foreground">Domain</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&_tr:nth-child(even)]:bg-muted/50">
             {questions && questions.length > 0 ? (
               questions.map((q) => (
                 <TableRow key={q.id}>

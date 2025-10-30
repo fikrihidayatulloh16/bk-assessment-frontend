@@ -69,13 +69,10 @@ export default function DashboardPage() {
     );
   }
 
-  // Tampilkan UI utama (TIDAK ADA YANG BERUBAH SAMA SEKALI DARI SINI KE BAWAH)
   return (
-    <div className="container mx-auto p-8">
-      {/* ... (Kode JSX Anda untuk Tombol Dialog dan Tabel) ... */}
-      {/* ... (Semua kode ini tetap sama persis) ... */}
-      {/* ... */}
-      <div className="flex items-center justify-between">
+    // Tambahkan padding container kita di sini
+    <div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <h1 className="text-3xl font-bold">Dashboard Asesmen</h1>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
@@ -127,12 +124,12 @@ export default function DashboardPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Judul</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Tanggal Dibuat</TableHead>
+              <TableHead className="font-semibold text-foreground">Judul</TableHead>
+              <TableHead className="font-semibold text-foreground">Status</TableHead>
+              <TableHead className="font-semibold text-foreground">Tanggal Dibuat</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&_tr:nth-child(even)]:bg-muted/50">
             {assessments && assessments.length > 0 ? (
               assessments.map((assessment) => (
                 <TableRow
