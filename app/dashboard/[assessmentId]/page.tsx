@@ -1,15 +1,11 @@
 // app/dashboard/[assessmentId]/page.tsx
 'use client';
 
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { useRouter, useParams } from 'next/navigation'; // <-- Impor useParams
 import { useState } from 'react';
+import { useDetails } from './useDetails'; // <-- 1. Impor hook kita
+import type { NewQuestionData } from './useDetails'; // <-- Impor tipe data
 
-// Komponen UI (kita akan pakai ulang dari dashboard)
+// 2. Impor semua komponen UI Anda (Button, Dialog, dll.)
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -31,7 +27,6 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-// Kita butuh 'Select' untuk dropdown Domain
 import {
   Select,
   SelectContent,
@@ -40,120 +35,50 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-// Tipe data baru kita
-interface Question {
-  id: string;
-  question_text: string;
-  question_type: string;
-  domain: {
-    name: string;
-  };
-}
-
-interface Domain {
-  id: string;
-  name: string;
-}
-
-// Helper fetch yang sama
-const fetchWithCredentials = async (
-  url: string,
-  options: RequestInit = {},
-) => {
-  const response = await fetch(`http://localhost:3000${url}`, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Terjadi kesalahan');
-  }
-  return response.json();
-};
-
 export default function AssessmentDetailPage() {
-  const router = useRouter();
-  const params = useParams(); // <-- Hook untuk mengambil ID dari URL
-  const assessmentId = params.assessmentId as string; // Ambil ID asesmen
-  const queryClient = useQueryClient();
-
-  // State untuk form 'Tambah Pertanyaan'
+  // 3. Definisikan STATE LOKAL (UI) di sini
   const [questionText, setQuestionText] = useState('');
   const [selectedDomain, setSelectedDomain] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // =============================================================
-  // KITA BUTUH 2 QUERIES SEKARANG
-  // =============================================================
+  // 4. Panggil hook-nya untuk mendapatkan data dan fungsi
+  const {
+    assessmentId,
+    questions,
+    isLoadingQuestions,
+    domains,
+    isLoadingDomains,
+    createQuestion,
+    isCreating,
+  } = useDetails();
 
-  // 1. Query untuk mengambil daftar PERTANYAAN
-  const { data: questions, isLoading: isLoadingQuestions } = useQuery<
-    Question[]
-  >({
-    queryKey: ['questions', assessmentId], // Kunci query harus unik
-    queryFn: () =>
-      fetchWithCredentials(`/questions/by-assessment/${assessmentId}`),
-    retry: (failureCount, err) => {
-      if (err.message.includes('Unauthorized')) {
-        router.push('/login');
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-
-  // 2. Query untuk mengambil daftar DOMAIN (untuk dropdown)
-  const { data: domains, isLoading: isLoadingDomains } = useQuery<Domain[]>({
-    queryKey: ['domains'],
-    queryFn: () => fetchWithCredentials('/domains'),
-    retry: false, // Kita sudah tangani di query pertama
-  });
-
-  // =============================================================
-  // Mutation untuk MEMBUAT PERTANYAAN baru
-  // =============================================================
-  const { mutate: createQuestion, isPending: isCreating } = useMutation({
-    mutationFn: (newQuestion: {
-      question_text: string;
-      question_type: string;
-      domainId: string;
-      assessmentId: string;
-    }) =>
-      fetchWithCredentials('/questions', {
-        method: 'POST',
-        body: JSON.stringify(newQuestion),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['questions', assessmentId] });
-      setIsModalOpen(false);
-      setQuestionText('');
-      setSelectedDomain('');
-    },
-    onError: (err) => {
-      alert(`Gagal menambah pertanyaan: ${err.message}`);
-    },
-  });
-
-  // Handler untuk submit form
+  // 5. Definisikan handler submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDomain) {
       alert('Silakan pilih domain');
       return;
     }
-    createQuestion({
+
+    const newQuestionData: NewQuestionData = {
       question_text: questionText,
-      question_type: 'yes_no', // Kita hardcode dulu sesuai rencana
+      question_type: 'yes_no',
       domainId: selectedDomain,
       assessmentId: assessmentId,
+    };
+
+    // Panggil mutasi dari hook
+    createQuestion(newQuestionData, {
+      // Tangani logika UI 'onSuccess' DI SINI, di dalam komponen
+      onSuccess: () => {
+        setIsModalOpen(false);
+        setQuestionText('');
+        setSelectedDomain('');
+      },
     });
   };
 
+  // 6. Tampilkan loading state
   if (isLoadingQuestions || isLoadingDomains) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -162,10 +87,12 @@ export default function AssessmentDetailPage() {
     );
   }
 
+  // 7. Tampilkan UI (JSX)
+  // (Kode JSX Anda dari sebelumnya sudah benar,
+  // pastikan Anda menempelkannya di sini)
   return (
     <div className="container mx-auto p-8">
       <div className="flex items-center justify-between">
-        {/* Nanti kita bisa fetch judul asesmennya juga */}
         <h1 className="text-3xl font-bold">Manajemen Pertanyaan</h1>
 
         {/* Tombol untuk membuka Modal 'Tambah Pertanyaan' */}
@@ -190,7 +117,6 @@ export default function AssessmentDetailPage() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="domain">Domain</Label>
-                  {/* Dropdown untuk memilih Domain */}
                   <Select
                     value={selectedDomain}
                     onValueChange={setSelectedDomain}
