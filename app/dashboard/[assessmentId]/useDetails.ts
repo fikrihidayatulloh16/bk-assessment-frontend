@@ -2,6 +2,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Assessment } from '../useAssessments';
 import { useRouter, useParams } from 'next/navigation';
 import { fetchWithCredentials } from '@/lib/api';
 
@@ -76,11 +77,19 @@ export function useDetails() {
     },
   });
 
+  const { data: assessment, isLoading: isLoadingAssessment } = useQuery<Assessment>({
+    queryKey: ['assessment', assessmentId], // Kunci unik
+    queryFn: () => fetchWithCredentials(`/assessments/${assessmentId}`),
+    retry: false, // Sudah ditangani query lain
+  });
+
   // 4. Kembalikan semua yang dibutuhkan oleh UI
   return {
     assessmentId,
+    assessment,
     questions,
     isLoadingQuestions,
+    isLoadingAssessment,
     domains,
     isLoadingDomains,
     createQuestion,

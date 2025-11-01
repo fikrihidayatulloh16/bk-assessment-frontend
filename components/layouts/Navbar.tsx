@@ -29,7 +29,7 @@ export default function Navbar() {
         </Link>
 
         {/* Tombol Logout */}
-        <Button variant="outline" size="sm" onClick={handleLogout}>
+        <Button className="mr-2" size="sm" onClick={handleLogout}>
           Logout
         </Button>
       </div>

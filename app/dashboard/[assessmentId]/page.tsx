@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { useDetails } from './useDetails'; // <-- 1. Impor hook kita
 import type { NewQuestionData } from './useDetails'; // <-- Impor tipe data
 
+import { Badge } from '@/components/ui/badge';
+
 // 2. Impor semua komponen UI Anda (Button, Dialog, dll.)
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +37,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
 export default function AssessmentDetailPage() {
   // 3. Definisikan STATE LOKAL (UI) di sini
   const [questionText, setQuestionText] = useState('');
@@ -44,8 +53,10 @@ export default function AssessmentDetailPage() {
   // 4. Panggil hook-nya untuk mendapatkan data dan fungsi
   const {
     assessmentId,
+    assessment,
     questions,
     isLoadingQuestions,
+    isLoadingAssessment,
     domains,
     isLoadingDomains,
     createQuestion,
@@ -79,7 +90,7 @@ export default function AssessmentDetailPage() {
   };
 
   // 6. Tampilkan loading state
-  if (isLoadingQuestions || isLoadingDomains) {
+  if (isLoadingQuestions || isLoadingDomains || isLoadingAssessment) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p>Loading data pertanyaan...</p>
@@ -94,91 +105,117 @@ export default function AssessmentDetailPage() {
     // Tambahkan padding container kita di sini
     <div>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-3xl font-bold">Daftar Pertanyaan</h1>
+        <h1 className="text-3xl font-bold">{assessment?.title || 'Manajemen Pertanyaan'}</h1>
+        <div>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Status:</span>
+            <Badge variant={assessment?.status === 'PUBLISHED' ? 'default' : 'secondary'}>
+              {assessment?.status}
+            </Badge>
+          </div>
+        </div>
 
-        {/* Tombol untuk membuka Modal 'Tambah Pertanyaan' */}
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogTrigger asChild>
-            <Button>Tambah Pertanyaan Baru</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Pertanyaan Baru</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="questionText">Teks Pertanyaan</Label>
-                  <Input
-                    id="questionText"
-                    value={questionText}
-                    onChange={(e) => setQuestionText(e.target.value)}
-                    required
-                  />
+        {/* Tombol Publish/Draft */}
+        <Button>
+          {assessment?.status === 'PUBLISHED' ? 'Jadikan Draft' : 'Publikasikan'}
+        </Button>
+      </div>
+
+      <Card className="mt-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b bg-muted/50 p-4 md:p-6">
+          {/* Judul Card (sesuai permintaan Anda) */}
+          <CardTitle className="text-xl">
+            Daftar Pertanyaan
+          </CardTitle>
+
+          {/* Tombol Dialog/Modal kita pindah ke sini */}
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button>Tambah Pertanyaan Baru</Button>
+            </DialogTrigger>
+            <DialogContent>
+              {/* ... (Isi Dialog/Modal Anda tidak berubah sama sekali) ... */}
+              <DialogHeader>
+                <DialogTitle>Pertanyaan Baru</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="questionText">Teks Pertanyaan</Label>
+                    <Input
+                      id="questionText"
+                      value={questionText}
+                      onChange={(e) => setQuestionText(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="domain">Domain</Label>
+                    <Select
+                      value={selectedDomain}
+                      onValueChange={setSelectedDomain}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih domain..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {domains?.map((domain) => (
+                          <SelectItem key={domain.id} value={domain.id}>
+                            {domain.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="domain">Domain</Label>
-                  <Select
-                    value={selectedDomain}
-                    onValueChange={setSelectedDomain}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih domain..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {domains?.map((domain) => (
-                        <SelectItem key={domain.id} value={domain.id}>
-                          {domain.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="button" variant="outline">
-                    Batal
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button type="button" variant="outline">
+                      Batal
+                    </Button>
+                  </DialogClose>
+                  <Button type="submit" disabled={isCreating}>
+                    {isCreating ? 'Menyimpan...' : 'Simpan'}
                   </Button>
-                </DialogClose>
-                <Button type="submit" disabled={isCreating}>
-                  {isCreating ? 'Menyimpan...' : 'Simpan'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
 
-      {/* Tabel untuk menampilkan daftar pertanyaan */}
-      <div className="mt-8 rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="font-semibold text-foreground">Pertanyaan</TableHead>
-              <TableHead className="font-semibold text-foreground">Domain</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody className="[&_tr:nth-child(even)]:bg-muted/50">
-            {questions && questions.length > 0 ? (
-              questions.map((q) => (
-                <TableRow key={q.id}>
-                  <TableCell className="font-medium">
-                    {q.question_text}
-                  </TableCell>
-                  <TableCell>{q.domain?.name || 'N/A'}</TableCell>
+        {/* Konten Card (Tabel) */}
+        <CardContent className="p-0">
+          {/* Kita hilangkan 'mt-4' dan 'border' karena Card sudah menanganinya */}
+          <div className="rounded-b-lg"> 
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="font-semibold text-foreground">Pertanyaan</TableHead>
+                  <TableHead className="font-semibold text-foreground">Domain</TableHead>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={2} className="text-center">
-                  Belum ada pertanyaan.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody className="[&_tr:nth-child(even)]:bg-muted/50">
+                {questions && questions.length > 0 ? (
+                  questions.map((q) => (
+                    <TableRow key={q.id}>
+                      <TableCell className="font-medium">
+                        {q.question_text}
+                      </TableCell>
+                      <TableCell>{q.domain?.name || 'N/A'}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={2} className="text-center">
+                      Belum ada pertanyaan.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
